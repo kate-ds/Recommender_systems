@@ -82,7 +82,7 @@ class MainRecommender:
         popularity.sort_values('quantity', ascending=False, inplace=True)
         popularity = popularity[popularity['item_id'] != 999999]
 
-        self.pop_item = popularity.head(1).item_id
+        self.pop_item = popularity.head(1).item_id.values
         self.pop_list = popularity.head(n).item_id.to_list()
 
         popularity = popularity.groupby('user_id').head(n)
@@ -132,12 +132,16 @@ class MainRecommender:
 
         res = []
         for i in range(1, N+1):
-            popular_item = popularity.item_id[popularity['user_id'] == similar_users[i][0]]
+            similar_user = similar_users[i][0]
+            popular_item = popularity[popularity['user_id'] == similar_user]['item_id'].values
 
             if len(popular_item) != 0:
                 res.append(int(popular_item))
             else:
-                res.append(self.pop_item)
+                try:
+                    res.append(self.pop_item[0])
+                except KeyError:
+                    print(f'Error user {user}')
 
         assert len(res) == N, 'Количество рекомендаций != {}'.format(N)
         return res
